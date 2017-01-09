@@ -20,7 +20,9 @@ var PlayScene = {
     _enPared: false,
     w: 800, 
     h: 600,
-    _bat: {}, //bat
+    _bat: {},
+    _ptos: 0,
+    _isPaused: false, //bat
 
     //Método constructor...
   create: function () {
@@ -42,59 +44,54 @@ var PlayScene = {
       this._pause = this.game.add.text(this.w - 100, 20, 'Pause', { font: '24px Arial', fill: '#fff' });
       this._pause.fixedToCamera = true;
       this._pause.inputEnabled = true;
+      this._puntos = this.game.add.text(this.w - 150, 50, 'Puntos: ' + this._ptos, { font: '24px Arial', fill: '#fff' });
+      this._puntos.fixedToCamera = true;
       //this._pause.cameraOffset.setTo(200, 500);
       var self = this;
       var menu;
-      var choiseLabel;
+      var menu2;
+      var unpauseMenu;
       this._pause.events.onInputUp.add(function () {
-        // When the paus button is pressed, we pause the game
-        self.game.paused = true;
-       
+        
+        self._isPaused = true;
+        self._rush.body.bounce.y = 0; //0,2
+        self._rush.body.gravity.y = 0; //2000
+        self._rush.body.gravity.x = 0;
+        self._rush.body.velocity.x = 0;
 
-        // Then add the menu
-        menu = self.game.add.sprite(self.camera.width/2, self.camera.height/2, 'menu');
-        //menu.fixedToCamera = true;
-        menu.anchor.setTo(0.5, 0.5);
 
-        // And a label to illustrate which menu item was chosen. (This is not necessary)
-        choiseLabel = self.game.add.text(self.camera.width/2, self.camera.height-150, 'Click outside menu to continue', { font: '30px Arial', fill: '#fff' });
-        choiseLabel.anchor.setTo(0.5, 0.5);
+        
+        menu = self.game.add.button(self.game.camera.x + 500, self.game.camera.y + 300, 
+                                          'button', 
+                                          self.actionOnClick, 
+                                          self, 2, 1, 0);
+        menu.anchor.set(0.5);
+        var text = self.game.add.text(0, 0, "Reset Game");
+        text.anchor.set(0.5);
+        menu.addChild(text);
+        
+
+        menu2 = self.game.add.button(self.game.camera.x + 250, self.game.camera.y + 300, 
+                                          'button', 
+                                          self.menuOnClick, 
+                                          self, 2, 2, 4);
+        menu2.anchor.set(0.5);
+        var textMenu = self.game.add.text(0, 0, "Return Main Menu");
+        textMenu.anchor.set(0.5);
+        menu2.addChild(textMenu);
+
+        unpauseMenu = self.game.add.button(self.game.camera.x + 350, self.game.camera.y + 450, 
+                                          'button', 
+                                          self.unpause, 
+                                          self, 2, 2, 4);
+        unpauseMenu.anchor.set(0.5);
+        var textUnpause = self.game.add.text(0, 0, "Continue");
+        textUnpause.anchor.set(0.5);
+        unpauseMenu.addChild(textUnpause);
+        
+        
+        
       });
-      this.game.input.onDown.add(unpause,self);
-      
-      function unpause(event){
-        // Only act if paused
-        if(self.game.paused){
-            // Calculate the corners of the menu
-            var x1 = self.w/2 - 270/2, x2 = self.w/2 + 270/2,
-                y1 = self.h/2 - 180/2, y2 = self.h/2 + 180/2;
-
-            // Check if the click was inside the menu
-            if(event.x > x1 && event.x < x2 && event.y > y1 && event.y < y2 ){
-                // The choicemap is an array that will help us see which item was clicked
-                var choisemap = ['one', 'two', 'three', 'four', 'five', 'six'];
-
-                // Get menu local coordinates for the click
-                var x = event.x - x1,
-                    y = event.y - y1;
-
-                // Calculate the choice 
-                var choise = Math.floor(x / 90) + 3*Math.floor(y / 90);
-
-                // Display the choice
-                choiseLabel.text = 'You chose menu item: ' + choisemap[choise];
-            }
-            else{
-                // Remove the menu and the label
-                menu.destroy();
-                choiseLabel.destroy();
-
-                // Unpause the game
-                self.game.paused = false;
-            }
-        }
-    };
-
 
 
       this.map.setCollisionBetween(1, 5000, true, 'Suelo');
@@ -119,9 +116,12 @@ var PlayScene = {
     
     //IS called one per frame.
     update: function () {
+        if(!this._isPaused){
         var moveDirection = new Phaser.Point(0, 0);
         var collisionWithTilemap = this.game.physics.arcade.collide(this._rush, this.Suelo);
         var movement = this.GetMovement();
+        this._puntos.text = 'Puntos: ' + this._ptos;
+        
         //transitions
         /*switch(this._playerState)
         {
@@ -222,9 +222,10 @@ var PlayScene = {
        
 
 
-        if(this.checkPlayerFell()){
+        if(this.checkPlayerFell() || this.checkPlayerBat()){
             //poner flash rojo.
             this.game.camera.flash(0xff0000, 500);
+            this._ptos = 0;
             this.onPlayerFell();
         }
        
@@ -232,6 +233,8 @@ var PlayScene = {
       //console.log(this._timer);
         if (this._timer > 200)
             this.teleport();
+           
+        
 
         if (this._rush.y > this._bat.y && (this._rush.y - this._bat.y) < 200)
             this.batAttack();
@@ -239,12 +242,47 @@ var PlayScene = {
              this.batAttack();
 
         else this.batMove();
+    	}
 
     },
     jump: function(){
         for(var i = 0; i<20;i++)
             this._rush.y -= 5;     
         
+    },
+    actionOnClick: function(self){
+        
+        this._isPaused = false;
+    	this._rush.body.bounce.y = 1000; //0,2
+        this._rush.body.gravity.y = 10000; //2000
+        this._rush.body.gravity.x = 0;
+        this._rush.body.velocity.x = 0;
+
+        self.destroy();
+        this.game.state.start('play');    
+    },
+    menuOnClick: function(self){
+        
+        this._isPaused = false;
+    	this._rush.body.bounce.y = 1000; //0,2
+        this._rush.body.gravity.y = 10000; //2000
+        this._rush.body.gravity.x = 0;
+        this._rush.body.velocity.x = 0;
+        self.destroy();
+        this.game.state.start('menu');    
+    },
+    unpause: function(self){
+    	
+    	//this.menu.destroy();
+        //this.game.menu2.visible = false;
+    	self.visible = false;
+       
+    	this._isPaused = false;
+    	this._rush.body.bounce.y = 1000; //0,2
+        this._rush.body.gravity.y = 10000; //2000
+        this._rush.body.gravity.x = 0;
+        this._rush.body.velocity.x = 0;
+    	
     },
     batAttack:function (){
                 if (this._bat.x > this._rush.x)
@@ -273,14 +311,6 @@ var PlayScene = {
             this._bat.body.velocity.x = this._bat.velx;                    
             this._bat.body.velocity.y = this._bat.vely;       
     },
-
-    pause: function(){
-        this.game.paused = true;
-
-        // Then add the menu
-        this.menu = this.game.add.sprite(this.w/2, this.h/2, 'menu');
-        this.menu.anchor.setTo(0.5, 0.5);
-    },
     teleport: function (){//SI REDIMENSIONAMOS, CAMBIAR PUNTOS DE TP. IMPORTANTE RESETEAR BAAAAAAAAAATS!!!!!!!!!!!!
             var puntTele = [960,3520,6656,9664,12224];
             for (var i = 1; i<= 4 ; i++){
@@ -295,6 +325,7 @@ var PlayScene = {
            // console.log('teleportado');
             this._timer = 0;
             console.log(puntTele[nextPoint]);
+            this._ptos += 960;
             this.game.camera.follow(this._rush);
             }
         }   
@@ -311,6 +342,10 @@ var PlayScene = {
     
     checkPlayerFell: function(){
         return(this.game.physics.arcade.collide(this._rush, this.Deathzones));
+            //this.onPlayerFell();
+    }, 
+    checkPlayerBat: function(){
+        return(this.game.physics.arcade.collide(this._rush, this._bat));
             //this.onPlayerFell();
     },
         
