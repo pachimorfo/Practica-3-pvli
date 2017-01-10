@@ -15,24 +15,23 @@ var PlayScene = {
     _playerState: PlayerState.STOP, //estado del player
     _direction: Direction.NONE,  //dirección inicial del player. NONE es ninguna dirección.
     _timer: 0,
-    _salto: true,
-    _saltoPared: true,
+    _saltoPared: false,
     _enPared: false,
     w: 800, 
     h: 600,
-    _bat: {},
+    _bat: [],
     _ptos: 0,
     _isPaused: false,
     _menu: {},
     _menu2: {},
     _unpauseMenu: {},
     _clock: {},
+    p: 0,
 
     //Método constructor...
   create: function () {
       //Creamos al player con un sprite por defecto.
-      //TODO 5 Creamos a rush 'rush'  con el sprite por defecto en el 10, 10 con la animación por defecto 'rush_idle01'
-      //TODO 4: Cargar el tilemap 'tilemap' y asignarle al tileset 'patrones' la imagen de sprites 'tiles'
+     
       this.map = this.game.add.tilemap('tilemap');
       this.map.addTilesetImage('TileSetMapachi','tiles');
       //Creacion de las layers
@@ -42,9 +41,16 @@ var PlayScene = {
       this.Deathzones = this.map.createLayer('Deathzones');
       //Colisiones con el plano de muerte y con el plano de muerte y con suelo.
       this._rush = this.game.add.sprite(100,2, 'rush');
-      this._bat = this.game.add.sprite(10,500, 'bat');
-      this._bat.velx = 150;
-      this._bat.vely = 0;
+      
+      this._bat.push(this.game.add.sprite(10,4416, 'bat1'));
+      this._bat.push(this.game.add.sprite(10,8640, 'bat2'));
+      this._bat.push(this.game.add.sprite(10,10816, 'bat3'));
+
+      for(var i = 0; i < this._bat.length; i++) {
+      	this._bat[i].velx = 150;
+      	this._bat[i].vely = 0;
+  	  }
+  	  console.log(this._bat.length);
       this._pause = this.game.add.text(this.w - 100, 20, 'Pause', { font: '24px Arial', fill: '#fff' });
       this._pause.fixedToCamera = true;
       this._pause.inputEnabled = true;
@@ -53,7 +59,6 @@ var PlayScene = {
       this._clock = this.game.time.create(false);
       this._clock.loop(1000, this.updateclock,this);
       this._clock.start();
-      //this._pause.cameraOffset.setTo(200, 500);
       var self = this;
       
       var menu2;
@@ -63,10 +68,16 @@ var PlayScene = {
         self._clock.pause();
         self._isPaused = true;
         self._rush.body.bounce.y = 0; //0,2
-        self._rush.body.gravity.y = 0; //2000
+        self._rush.body.gravity.y = 0;
         self._rush.body.gravity.x = 0;
         self._rush.body.velocity.x = 0;
-        self._menu.visible = true;
+        for(var i = 0; i < self._bat.length; i++){
+        	self._bat[i].body.velocity.x = 0;                    
+          	self._bat[i].body.velocity.y = 0;    
+            
+
+        }
+        
 
         self._menu = self.game.add.button(self.game.camera.x + 500, self.game.camera.y + 300, 
                                           'button', 
@@ -185,21 +196,18 @@ var PlayScene = {
             //Colisiion con la pared. Reseteamos el salto.
                 if(collisionWithTilemap){
                     this._enPared = true;
-                    this._saltoPared = true;
-                    this._salto = true;
+                    this._saltoPared = false;
                 }        
                 if(this._enPared) {//Si esta en pared, cambiamos gravedad, sensacion de rozamiento.
                     this._rush.body.gravity.y = 5000;
                     //Salto para salir de la pared.
-                    if(this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this._saltoPared){
-                        //this.jump();
-                        moveDirection.y = -12500;
-                        this._saltoPared = false;
+                    if(this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)){        
+                        this._saltoPared = true;
                         this._enPared = false;
                     }
                 }
                 else
-                    this._rush.body.gravity.y = 10000;
+                    this._rush.body.gravity.y = 25000;
                 if(!this._enPared){//Si no es pared, movimiento normal ---->>>>>>>>>> TIMER
                     if(movement === Direction.RIGHT){//Mov Derecha
                         moveDirection.x = this._speed;
@@ -214,11 +222,6 @@ var PlayScene = {
                             if(this._rush.scale.x > 0)
                                this._rush.scale.x *= -1; 
 
-                    }//Salto normal. ->>>>>>>>>>>>>>>>>>>>>> SE HACE A LA VEZ QUE EL OTRO SALTO Y NO VA BIEN, RETOCAR.
-                    if(this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR) && this._salto){
-                        moveDirection.y = -12500;
-                        //this.jump();
-                        this._salto = false;
                     }
                 }
                 console.log(this._salto + 'salto normal');
@@ -231,34 +234,49 @@ var PlayScene = {
        
 
 
-        if(this.checkPlayerFell() || this.checkPlayerBat()){
+        if(this.checkPlayerFell()){
             //poner flash rojo.
             this.game.camera.flash(0xff0000, 500);
             this._ptos = 0;
             this.onPlayerFell();
         }
+        else{
+        	var i = 0;
+        	while(i < this._bat.length && !this.checkPlayerBat(i)){
+        		i++;
+        	}
+
+        	if(i < this._bat.length){
+        		this.game.camera.flash(0xff0000, 500);
+            	this._ptos = 0;
+            	this.onPlayerFell();
+        	}
+
+        }
        
         this._timer++;
       //console.log(this._timer);
         if (this._timer > 200)
-            this.teleport();
-           
+            this.teleport(); 
+
+        if(this._saltoPared){
+        	this._rush.body.velocity.y = -750;      	
+
+            if(this._rush.x < 300)
+                this._rush.body.velocity.x = +250;
+            else 
+               	this._rush.body.velocity.x = -250;
+        	this.p++;
+        	if(this.p > 20){
+        		this.p = 0;
+        		this._saltoPared = false;
+        	}        	
+
+        }
+        this.batMove();         
         
 
-        if (this._rush.y > this._bat.y && (this._rush.y - this._bat.y) < 200)
-            this.batAttack();
-        else if (this._rush.y < this._bat.y &&  (this._bat.y - this._rush.y) < 200 )
-             this.batAttack();
-
-        else this.batMove();
-    	}
-
-    },
-    jump: function(){
-        for(var i = 0; i<20;i++)
-            this._rush.y -= 5;     
-        
-    },
+    }},
     updateclock: function(){
     	this._ptos++;
     },
@@ -269,7 +287,7 @@ var PlayScene = {
 
         this._isPaused = false;
     	this._rush.body.bounce.y = 1000; //0,2
-        this._rush.body.gravity.y = 10000; //2000
+        this._rush.body.gravity.y = 25000; //2000
         this._rush.body.gravity.x = 0;
         this._rush.body.velocity.x = 0;
         this._ptos = 0;
@@ -285,7 +303,7 @@ var PlayScene = {
         
         this._isPaused = false;
     	this._rush.body.bounce.y = 1000; //0,2
-        this._rush.body.gravity.y = 10000; //2000
+        this._rush.body.gravity.y = 25000; //2000
         this._rush.body.gravity.x = 0;
         this._rush.body.velocity.x = 0;
         this._ptos = 0;
@@ -300,37 +318,49 @@ var PlayScene = {
 
     	this._isPaused = false;
     	this._rush.body.bounce.y = 1000; //0,2
-        this._rush.body.gravity.y = 10000; //2000
+        this._rush.body.gravity.y = 25000; //2000
         this._rush.body.gravity.x = 0;
         this._rush.body.velocity.x = 0;
     	
     },
-    batAttack:function (){
-                if (this._bat.x > this._rush.x)
-                    this._bat.velx = -150;   
-                else if (this._bat.x < this._rush.x)
-                    this._bat.velx = 150;
-                else this._bat.velx = 0;
-                if (this._bat.y > this._rush.y)
-                    this._bat.vely = -150;
-                else if (this._bat.y < this._rush.y)
-                    this._bat.vely = 150;
-                else this._bat.vely = 0;
+    batMove:function (){
+        for(var i = 0; i < this._bat.length; i++) {    
+        	
+        	if (this._rush.y > this._bat[i].y && (this._rush.y - this._bat[i].y) < 200)
+            	this.batAttack(i);
+        	else if (this._rush.y < this._bat[i].y &&  (this._bat[i].y - this._rush.y) < 200 )
+            	this.batAttack(i);
+            else{
+            	this._bat[i].vely = 0;
+           
+           		if (this.game.physics.arcade.collide(this._bat[i], this.Suelo))
+               		this._bat[i].velx = - this._bat[i].velx;
+               
+           		this._bat[i].body.velocity.x = this._bat[i].velx;                    
+          		this._bat[i].body.velocity.y = this._bat[i].vely;    
+            }
 
-            this._bat.body.velocity.x = this._bat.velx;
-            this._bat.body.velocity.y = this._bat.vely;
+     	}
+
+                
     },
 
-    batMove: function(){
-           
-            console.log('salio');
-            this._bat.vely = 0;
-           
-            if (this.game.physics.arcade.collide(this._bat, this.Suelo))
-                this._bat.velx = - this._bat.velx;
+    batAttack: function(i){
+            if (this._bat[i].x > this._rush.x)
+                this._bat[i].velx = -150;   
+            else if (this._bat[i].x < this._rush.x)
+                this._bat[i].velx = 150;
+            else this._bat[i].velx = 0;
                 
-            this._bat.body.velocity.x = this._bat.velx;                    
-            this._bat.body.velocity.y = this._bat.vely;       
+            if (this._bat[i].y > this._rush.y)
+                this._bat[i].vely = -150;
+            else if (this._bat[i].y < this._rush.y)
+                this._bat[i].vely = 150;
+            else this._bat[i].vely = 0;
+
+            this._bat[i].body.velocity.x = this._bat[i].velx;
+            this._bat[i].body.velocity.y = this._bat[i].vely;
+              
     },
     teleport: function (){//SI REDIMENSIONAMOS, CAMBIAR PUNTOS DE TP. IMPORTANTE RESETEAR BAAAAAAAAAATS!!!!!!!!!!!!
             var puntTele = [960,3520,6656,9664,12224];
@@ -365,8 +395,8 @@ var PlayScene = {
         return(this.game.physics.arcade.collide(this._rush, this.Deathzones));
             //this.onPlayerFell();
     }, 
-    checkPlayerBat: function(){
-        return(this.game.physics.arcade.collide(this._rush, this._bat));
+    checkPlayerBat: function(i){
+        return(this.game.physics.arcade.collide(this._rush, this._bat[i]));
             //this.onPlayerFell();
     },
         
@@ -404,10 +434,12 @@ var PlayScene = {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.game.stage.backgroundColor = '#a9f0ff';
         this.game.physics.arcade.enable(this._rush);
-        this.game.physics.arcade.enable(this._bat);
+        for(var i = 0; i < this._bat.length; i++) {
+        	this.game.physics.arcade.enable(this._bat[i]);
+    	}
         
         this._rush.body.bounce.y = 1000; //0,2
-        this._rush.body.gravity.y = 10000; //2000
+        this._rush.body.gravity.y = 25000; //2000
         this._rush.body.gravity.x = 0;
         this._rush.body.velocity.x = 0;
         
