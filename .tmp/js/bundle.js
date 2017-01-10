@@ -202,7 +202,11 @@ var PlayScene = {
     h: 600,
     _bat: {},
     _ptos: 0,
-    _isPaused: false, //bat
+    _isPaused: false,
+    _menu: {},
+    _menu2: {},
+    _unpauseMenu: {},
+    _clock: {},
 
     //Método constructor...
   create: function () {
@@ -224,50 +228,55 @@ var PlayScene = {
       this._pause = this.game.add.text(this.w - 100, 20, 'Pause', { font: '24px Arial', fill: '#fff' });
       this._pause.fixedToCamera = true;
       this._pause.inputEnabled = true;
-      this._puntos = this.game.add.text(this.w - 150, 50, 'Puntos: ' + this._ptos, { font: '24px Arial', fill: '#fff' });
+      this._puntos = this.game.add.text(this.w - 200, 50, 'Puntos: ' + this._ptos, { font: '24px Arial', fill: '#fff' });
       this._puntos.fixedToCamera = true;
+      this._clock = this.game.time.create(false);
+      this._clock.loop(1000, this.updateclock,this);
+      this._clock.start();
       //this._pause.cameraOffset.setTo(200, 500);
       var self = this;
-      var menu;
+      
       var menu2;
       var unpauseMenu;
+      
       this._pause.events.onInputUp.add(function () {
-        
+        self._clock.pause();
         self._isPaused = true;
         self._rush.body.bounce.y = 0; //0,2
         self._rush.body.gravity.y = 0; //2000
         self._rush.body.gravity.x = 0;
         self._rush.body.velocity.x = 0;
+        self._menu.visible = true;
 
-
-        
-        menu = self.game.add.button(self.game.camera.x + 500, self.game.camera.y + 300, 
+        self._menu = self.game.add.button(self.game.camera.x + 500, self.game.camera.y + 300, 
                                           'button', 
                                           self.actionOnClick, 
                                           self, 2, 1, 0);
-        menu.anchor.set(0.5);
+        self._menu.anchor.set(0.5);
         var text = self.game.add.text(0, 0, "Reset Game");
         text.anchor.set(0.5);
-        menu.addChild(text);
+        self._menu.addChild(text);
+               
+      
         
 
-        menu2 = self.game.add.button(self.game.camera.x + 250, self.game.camera.y + 300, 
+        self._menu2 = self.game.add.button(self.game.camera.x + 250, self.game.camera.y + 300, 
                                           'button', 
                                           self.menuOnClick, 
                                           self, 2, 2, 4);
-        menu2.anchor.set(0.5);
+        self._menu2.anchor.set(0.5);
         var textMenu = self.game.add.text(0, 0, "Return Main Menu");
         textMenu.anchor.set(0.5);
-        menu2.addChild(textMenu);
+        self._menu2.addChild(textMenu);
 
-        unpauseMenu = self.game.add.button(self.game.camera.x + 350, self.game.camera.y + 450, 
+        self._unpauseMenu = self.game.add.button(self.game.camera.x + 350, self.game.camera.y + 450, 
                                           'button', 
                                           self.unpause, 
                                           self, 2, 2, 4);
-        unpauseMenu.anchor.set(0.5);
+        self._unpauseMenu.anchor.set(0.5);
         var textUnpause = self.game.add.text(0, 0, "Continue");
         textUnpause.anchor.set(0.5);
-        unpauseMenu.addChild(textUnpause);
+        self._unpauseMenu.addChild(textUnpause);
         
         
         
@@ -300,7 +309,7 @@ var PlayScene = {
         var moveDirection = new Phaser.Point(0, 0);
         var collisionWithTilemap = this.game.physics.arcade.collide(this._rush, this.Suelo);
         var movement = this.GetMovement();
-        this._puntos.text = 'Puntos: ' + this._ptos;
+        this._puntos.text = 'Puntuación: ' + this._ptos;
         
         //transitions
         /*switch(this._playerState)
@@ -430,33 +439,45 @@ var PlayScene = {
             this._rush.y -= 5;     
         
     },
+    updateclock: function(){
+    	this._ptos++;
+    },
     actionOnClick: function(self){
-        
+        this._unpauseMenu.destroy();
+        this._menu2.destroy();
+    	self.destroy();
+
         this._isPaused = false;
     	this._rush.body.bounce.y = 1000; //0,2
         this._rush.body.gravity.y = 10000; //2000
         this._rush.body.gravity.x = 0;
         this._rush.body.velocity.x = 0;
+        this._ptos = 0;
 
-        self.destroy();
+        
         this.game.state.start('play');    
     },
     menuOnClick: function(self){
         
+        this._menu.destroy();
+        this._unpauseMenu.destroy();
+    	self.destroy();
+        
         this._isPaused = false;
     	this._rush.body.bounce.y = 1000; //0,2
         this._rush.body.gravity.y = 10000; //2000
         this._rush.body.gravity.x = 0;
         this._rush.body.velocity.x = 0;
-        self.destroy();
+        this._ptos = 0;
+        
         this.game.state.start('menu');    
     },
     unpause: function(self){
-    	
-    	//this.menu.destroy();
-        //this.game.menu2.visible = false;
-    	self.visible = false;
-       
+    	this._clock.resume();
+    	this._menu.destroy();
+        this._menu2.destroy();
+    	self.destroy();
+
     	this._isPaused = false;
     	this._rush.body.bounce.y = 1000; //0,2
         this._rush.body.gravity.y = 10000; //2000
@@ -505,7 +526,7 @@ var PlayScene = {
            // console.log('teleportado');
             this._timer = 0;
             console.log(puntTele[nextPoint]);
-            this._ptos += 960;
+            
             this.game.camera.follow(this._rush);
             }
         }   
