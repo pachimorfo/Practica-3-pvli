@@ -40,15 +40,29 @@ var PlayScene = {
       //this.Colisiones = this.map.createLayer('Colisiones');
       this.Deathzones = this.map.createLayer('Deathzones');
       //Colisiones con el plano de muerte y con el plano de muerte y con suelo.
-      this._rush = this.game.add.sprite(100,2, 'rush');
+      this._rush = this.game.add.sprite(100,2, 'DimitriI');
+      this._rush.scale.setTo(2,2);
+      this._rush.animations.add('DimitriI');
+      this._rush.animations.play('DimitriI',30,true);
       
-      this._bat.push(this.game.add.sprite(10,4416, 'bat1'));
-      this._bat.push(this.game.add.sprite(10,8640, 'bat2'));
-      this._bat.push(this.game.add.sprite(10,10816, 'bat3'));
+
+     // this._rush.animations.add('rush');
+     // this._rush.animations.add('Paracaidas');
+      
+      this._bat.push(this.game.add.sprite(10,4416, 'batAttack'));
+      //this._bat[0].animations.add('batAttack');
+      //this._bat[0].animations.play('batAttack',15, true);
+      	
+      this._bat.push(this.game.add.sprite(10,8640, 'bat'));
+      this._bat.push(this.game.add.sprite(10,10816, 'bat'));
 
       for(var i = 0; i < this._bat.length; i++) {
       	this._bat[i].velx = 150;
       	this._bat[i].vely = 0;
+      	this._bat[i].scale.setTo(1.5,1.5);
+      	//this._bat[i].animations.add('bat');
+      	//this._bat[i].animations.play('bat',15, true);
+      	
   	  }
   	  console.log(this._bat.length);
       this._pause = this.game.add.text(this.w - 100, 20, 'Pause', { font: '24px Arial', fill: '#fff' });
@@ -125,12 +139,12 @@ var PlayScene = {
       this.Suelo.resizeWorld(); //resize world and adjust to the screen
       
       //nombre de la animación, frames, framerate, isloop
-      this._rush.animations.add('run',
+      /*this._rush.animations.add('run',
                     Phaser.Animation.generateFrameNames('rush_run',1,5,'',2),10,true);
       this._rush.animations.add('stop',
                     Phaser.Animation.generateFrameNames('rush_idle',1,1,'',2),0,false);
       this._rush.animations.add('jump',
-                     Phaser.Animation.generateFrameNames('rush_jump',2,2,'',2),0,false);
+                     Phaser.Animation.generateFrameNames('rush_jump',2,2,'',2),0,false);*/
       this.configure();
   },
     
@@ -200,14 +214,23 @@ var PlayScene = {
                 }        
                 if(this._enPared) {//Si esta en pared, cambiamos gravedad, sensacion de rozamiento.
                     this._rush.body.gravity.y = 5000;
-                    //Salto para salir de la pared.
+                    this._rush.loadTexture('DimitriPD', 0);
+           			this._rush.animations.add('DimitriPD');
+					this._rush.animations.play('DimitriPD',30,true);
+                    
+           			
+               		
+               		//Salto para salir de la pared.
                     if(this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)){        
                         this._saltoPared = true;
                         this._enPared = false;
+                        this._rush.loadTexture('DimitriI', 0);
+						this._rush.animations.play('DimitriI',30,true);
                     }
                 }
                 else
                     this._rush.body.gravity.y = 25000;
+               
                 if(!this._enPared){//Si no es pared, movimiento normal ---->>>>>>>>>> TIMER
                     if(movement === Direction.RIGHT){//Mov Derecha
                         moveDirection.x = this._speed;
@@ -224,9 +247,7 @@ var PlayScene = {
 
                     }
                 }
-                console.log(this._salto + 'salto normal');
-                console.log(this._saltoPared + 'salto pared');
-
+              
         //}
         //movement
         this.movement(moveDirection,5,
@@ -259,20 +280,23 @@ var PlayScene = {
         if (this._timer > 200)
             this.teleport(); 
 
-        if(this._saltoPared){
-        	this._rush.body.velocity.y = -750;      	
 
-            if(this._rush.x < 300)
-                this._rush.body.velocity.x = +250;
-            else 
-               	this._rush.body.velocity.x = -250;
-        	this.p++;
-        	if(this.p > 20){
-        		this.p = 0;
-        		this._saltoPared = false;
-        	}        	
+         if(this._saltoPared){
+        			this._rush.body.velocity.y = -750;      	
 
-        }
+            		if(this._rush.x < 300)
+                		this._rush.body.velocity.x = +250;
+            		else 
+               			this._rush.body.velocity.x = -250;
+        			this.p++;
+        			if(this.p > 20){
+        				this.p = 0;
+        				this._saltoPared = false;
+        			}	        	
+
+        		}
+
+       
         this.batMove();         
         
 
@@ -413,19 +437,39 @@ var PlayScene = {
         var movement = Direction.NONE
         //Move Right
         if(this.game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)){
+        	this._rush.loadTexture('DimitriI', 0);
+			this._rush.animations.play('DimitriI',30,true);
             movement = Direction.RIGHT;
         }
         //Move Left
         if(this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)){
+        	this._rush.loadTexture('DimitriI', 0);
+			this._rush.animations.play('DimitriI',30,true);
             movement = Direction.LEFT;
         }
         if(this.game.input.keyboard.isDown(Phaser.Keyboard.DOWN)){
-            this._rush.y += 4;
+        	//this._rush.animations.play('rush');
+        	if(!this._enPared){
+        		this._rush.loadTexture('rush');
+            	this._rush.y += 4;
+        	}
         }
         if(this.game.input.keyboard.isDown(Phaser.Keyboard.UP)){
-            this._rush.y -= 4;
+        	//this._rush.animations.play('Paracaidas');
+        	console.log('AAAAAAAAAARRRRRRRRRIBA');
+        	if(!this._enPared){
+        		this._rush.loadTexture('Paracaidas');
+            	this._rush.y -= 4;
+        	}
         }
+        if(movement === Direction.NONE){
+			/*this._rush.loadTexture('DimitriI');
+			this._rush.animations.add('DimitriI');
+			this._rush.animations.play('DimitriI',30,true);*/
+		}
+		
         return movement;
+        
     },
     //configure the scene
     configure: function(){

@@ -41,8 +41,16 @@ var PreloaderScene = {
       //como descriptor de la animación.
       this.game.load.image('tiles', 'images/TileSetFinal.png');
       this.game.load.tilemap('tilemap', 'images/map.json', null, Phaser.Tilemap.TILED_JSON);
-      this.game.load.atlas('rush', 'images/rush_spritesheet.png', 'images/rush_spritesheet.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-      this.game.load.image('bat', 'images/bat.png');
+      //Texturas de Dimitri
+      this.game.load.image('rush', 'images/Dimitri Rusheo.png');
+      this.game.load.spritesheet('DimitriI', 'images/Dimitri cayendo Izquierda.png', 32,32,5);
+      this.game.load.image('Paracaidas', 'images/Dimitri Paracaidas.png');
+      this.game.load.spritesheet('DimitriPD', 'images/Dimitri Pared Izquierda.png', 32,32,4);
+
+
+
+      this.game.load.spritesheet('bat', 'images/Bat move.png', 32,32,4);
+      this.game.load.spritesheet('batAttack', 'images/Bat Attack.png',32,32,4);
 
 
       //TODO 2.2a Escuchar el evento onLoadComplete con el método loadComplete que el state 'play'
