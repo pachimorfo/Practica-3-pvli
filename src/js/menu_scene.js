@@ -6,7 +6,7 @@ var MenuScene = {
                                         'logo');
         logo.anchor.setTo(0.5, 0.5);
         var buttonStart = this.game.add.button(this.game.world.centerX, 
-                                               this.game.world.centerY, 
+                                               this.game.world.centerY+ 175, 
                                                'button', 
                                                this.actionOnClick, 
                                                this, 2, 1, 0);

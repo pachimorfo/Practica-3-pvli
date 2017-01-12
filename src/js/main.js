@@ -39,19 +39,27 @@ var PreloaderScene = {
       //la imagen 'images/simples_pimples.png' con el nombre de la cache 'tiles' y
       // el atlasJSONHash con 'images/rush_spritesheet.png' como imagen y 'images/rush_spritesheet.json'
       //como descriptor de la animación.
+      this.game.load.audio('intro','sounds/Intro.mp3');
+      this.game.load.audio('loopeo','sounds/Loop.mp3');
+      this.game.load.audio('final','sounds/Final.mp3');
       this.game.load.image('tiles', 'images/TileSetFinal.png');
+      
       this.game.load.tilemap('tilemap', 'images/map.json', null, Phaser.Tilemap.TILED_JSON);
       //Texturas de Dimitri
       this.game.load.image('rush', 'images/Dimitri Rusheo.png');
+
       this.game.load.spritesheet('DimitriI', 'images/Dimitri cayendo Izquierda.png', 32,32,5);
+
       this.game.load.image('Paracaidas', 'images/Dimitri Paracaidas.png');
+  
       this.game.load.spritesheet('DimitriPD', 'images/Dimitri Pared Izquierda.png', 32,32,4);
 
 
 
-      this.game.load.spritesheet('bat', 'images/Bat move.png', 32,32,4);
-      this.game.load.spritesheet('batAttack', 'images/Bat Attack.png',32,32,4);
-
+      this.game.load.spritesheet('batmove', 'images/Bat move.png', 32,32,4);
+      
+      this.game.load.spritesheet('batattack', 'images/Bat Attack.png',32,32,4);
+    
 
       //TODO 2.2a Escuchar el evento onLoadComplete con el método loadComplete que el state 'play'
     this.load.onLoadComplete.add(this.loadComplete,this);
@@ -102,6 +110,7 @@ window.onload = function () {
 
 function init(){
  var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game');
+ game.antialias = false;
 
 //TODO 1.2 Añadir los states 'boot' BootScene, 'menu' MenuScene, 'preloader' PreloaderScene, 'play' PlayScene, 'gameOver' GameOver.
                 game.state.add('boot',BootScene);

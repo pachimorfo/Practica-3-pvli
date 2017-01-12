@@ -81,19 +81,27 @@ var PreloaderScene = {
       //la imagen 'images/simples_pimples.png' con el nombre de la cache 'tiles' y
       // el atlasJSONHash con 'images/rush_spritesheet.png' como imagen y 'images/rush_spritesheet.json'
       //como descriptor de la animación.
+      this.game.load.audio('intro','sounds/Intro.mp3');
+      this.game.load.audio('loopeo','sounds/Loop.mp3');
+      this.game.load.audio('final','sounds/Final.mp3');
       this.game.load.image('tiles', 'images/TileSetFinal.png');
+      
       this.game.load.tilemap('tilemap', 'images/map.json', null, Phaser.Tilemap.TILED_JSON);
       //Texturas de Dimitri
       this.game.load.image('rush', 'images/Dimitri Rusheo.png');
+
       this.game.load.spritesheet('DimitriI', 'images/Dimitri cayendo Izquierda.png', 32,32,5);
+
       this.game.load.image('Paracaidas', 'images/Dimitri Paracaidas.png');
+  
       this.game.load.spritesheet('DimitriPD', 'images/Dimitri Pared Izquierda.png', 32,32,4);
 
 
 
-      this.game.load.spritesheet('bat', 'images/Bat move.png', 32,32,4);
-      this.game.load.spritesheet('batAttack', 'images/Bat Attack.png',32,32,4);
-
+      this.game.load.spritesheet('batmove', 'images/Bat move.png', 32,32,4);
+      
+      this.game.load.spritesheet('batattack', 'images/Bat Attack.png',32,32,4);
+    
 
       //TODO 2.2a Escuchar el evento onLoadComplete con el método loadComplete que el state 'play'
     this.load.onLoadComplete.add(this.loadComplete,this);
@@ -144,6 +152,7 @@ window.onload = function () {
 
 function init(){
  var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game');
+ game.antialias = false;
 
 //TODO 1.2 Añadir los states 'boot' BootScene, 'menu' MenuScene, 'preloader' PreloaderScene, 'play' PlayScene, 'gameOver' GameOver.
                 game.state.add('boot',BootScene);
@@ -168,7 +177,7 @@ var MenuScene = {
                                         'logo');
         logo.anchor.setTo(0.5, 0.5);
         var buttonStart = this.game.add.button(this.game.world.centerX, 
-                                               this.game.world.centerY, 
+                                               this.game.world.centerY+ 175, 
                                                'button', 
                                                this.actionOnClick, 
                                                this, 2, 1, 0);
@@ -218,8 +227,17 @@ var PlayScene = {
 
     //Método constructor...
   create: function () {
+      this.intro = this.game.add.sound('intro');
+      this.loopeo = this.game.add.sound('loopeo');
+      this.final = this.game.add.sound('final');
+      if(!this.intro.isPlaying && !this.loopeo.isPlaying)
+          this.intro.play();
+      this.loopeo.loop = true;
       //Creamos al player con un sprite por defecto.
-     
+      //this.soundmaster.intro = this.game.add.audio('intro');
+      //this.soundmaster.loopeo = this.game.add.audio('loopeo');
+      //this.soundmaster.final = this.game.add.audio('final');
+      //this.soundmaster.intro.play();
       this.map = this.game.add.tilemap('tilemap');
       this.map.addTilesetImage('TileSetMapachi','tiles');
       //Creacion de las layers
@@ -233,30 +251,29 @@ var PlayScene = {
       this._rush.animations.add('DimitriI');
       this._rush.animations.play('DimitriI',30,true);
       
-
+      
      // this._rush.animations.add('rush');
      // this._rush.animations.add('Paracaidas');
       
-      this._bat.push(this.game.add.sprite(10,4416, 'batAttack'));
+      this._bat.push(this.game.add.sprite(10,4416, 'batmove'));
       //this._bat[0].animations.add('batAttack');
       //this._bat[0].animations.play('batAttack',15, true);
-      	
-      this._bat.push(this.game.add.sprite(10,8640, 'bat'));
-      this._bat.push(this.game.add.sprite(10,10816, 'bat'));
+      this._bat.push(this.game.add.sprite(10,8640, 'batmove'));
+      this._bat.push(this.game.add.sprite(10,10816, 'batmove'));
 
       for(var i = 0; i < this._bat.length; i++) {
       	this._bat[i].velx = 150;
       	this._bat[i].vely = 0;
       	this._bat[i].scale.setTo(1.5,1.5);
-      	//this._bat[i].animations.add('bat');
-      	//this._bat[i].animations.play('bat',15, true);
+        //this._bat[i].animations.add('batattack');
+      	//this._bat[i].animations.play('batmove',15, true);
       	
   	  }
   	  console.log(this._bat.length);
-      this._pause = this.game.add.text(this.w - 100, 20, 'Pause', { font: '24px Arial', fill: '#fff' });
+      this._pause = this.game.add.text(this.w - 100, 20, 'Pause', { font: '24px Arial', fill: '#ffj' });
       this._pause.fixedToCamera = true;
       this._pause.inputEnabled = true;
-      this._puntos = this.game.add.text(this.w - 200, 50, 'Puntos: ' + this._ptos, { font: '24px Arial', fill: '#fff' });
+      this._puntos = this.game.add.text(this.w - 200, 50, 'Puntos: ' + this._ptos, { font: '24px Arial', fill: '#ffj' });
       this._puntos.fixedToCamera = true;
       this._clock = this.game.time.create(false);
       this._clock.loop(1000, this.updateclock,this);
@@ -338,6 +355,12 @@ var PlayScene = {
     
     //IS called one per frame.
     update: function () {
+      if(!this.intro.isPlaying && !this.loopeo.isPlaying && this.intro.isDecoded && this.loopeo.isDecoded)
+        this.loopeo.play();
+       // this.soundmaster.intro.onStop.addOnce(function() {  
+         // this.soundmaster.loopeo.loopFull();
+         // this.soundmaster.loopeo.play()}, this);
+
         if(!this._isPaused){
         var moveDirection = new Phaser.Point(0, 0);
         var collisionWithTilemap = this.game.physics.arcade.collide(this._rush, this.Suelo);
@@ -536,8 +559,8 @@ var PlayScene = {
     	
     },
     batMove:function (){
-        for(var i = 0; i < this._bat.length; i++) {    
-        	
+        for(var i = 0; i < this._bat.length; i++) {
+        	this._bat[i].animations.play('batmove',15, true);
         	if (this._rush.y > this._bat[i].y && (this._rush.y - this._bat[i].y) < 200)
             	this.batAttack(i);
         	else if (this._rush.y < this._bat[i].y &&  (this._bat[i].y - this._rush.y) < 200 )
@@ -558,6 +581,7 @@ var PlayScene = {
     },
 
     batAttack: function(i){
+                //this._bat[i].animations.play('batattack',30, true);
             if (this._bat[i].x > this._rush.x)
                 this._bat[i].velx = -150;   
             else if (this._bat[i].x < this._rush.x)
@@ -599,6 +623,7 @@ var PlayScene = {
     
     onPlayerFell: function(){
         //TODO 6 Carga de 'gameOver'; 
+        this.destroyResources();
         this.game.state.start('gameOver');
     
     },
@@ -688,8 +713,13 @@ var PlayScene = {
     
     //TODO 9 destruir los recursos tilemap, tiles y logo.
     destroyResources: function(){
-        this.tilemap.destroy();
-        this.tiles.destroy();
+        this._rush.destroy();
+        for(var i=0;i++;i<this._bat.length)
+        this._bat[i].destroy();
+        this.intro.stop();
+        this.loopeo.stop();
+        //this.tilemap.destroy();
+        //this.tiles.destroy();
         this.game.world.setBounds(0,0,800,600);
     }
 };
