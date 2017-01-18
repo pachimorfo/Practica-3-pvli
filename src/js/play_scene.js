@@ -27,13 +27,16 @@ var PlayScene = {
     _unpauseMenu: {},
     _clock: {},
     p: 0,
+    _gravitycontroler: true,
 
     //Método constructor...
   create: function () {
       this.intro = this.game.add.sound('intro');
       this.loopeo = this.game.add.sound('loopeo');
       this.final = this.game.add.sound('final');
-      if(!this.intro.isPlaying && !this.loopeo.isPlaying)
+      this.hit = this.game.add.sound('hit');
+      this.jump = this.game.add.sound('jump');
+     if(!this.intro.isPlaying && !this.loopeo.isPlaying)
           this.intro.play();
       this.loopeo.loop = true;
       //Creamos al player con un sprite por defecto.
@@ -68,8 +71,8 @@ var PlayScene = {
       	this._bat[i].velx = 150;
       	this._bat[i].vely = 0;
       	this._bat[i].scale.setTo(1.5,1.5);
-        //this._bat[i].animations.add('batattack');
-      	//this._bat[i].animations.play('batmove',15, true);
+        this._bat[i].animations.add('batattack');
+        this._bat[i].animations.add('batmove');
       	
   	  }
   	  console.log(this._bat.length);
@@ -230,7 +233,7 @@ var PlayScene = {
                     this._rush.body.gravity.y = 5000;
                     this._rush.loadTexture('DimitriPD', 0);
            			this._rush.animations.add('DimitriPD');
-					this._rush.animations.play('DimitriPD',30,true);
+				      	this._rush.animations.play('DimitriPD',30,true);
                     
            			
                		
@@ -238,11 +241,12 @@ var PlayScene = {
                     if(this.game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)){        
                         this._saltoPared = true;
                         this._enPared = false;
+                        this.jump.play();
                         this._rush.loadTexture('DimitriI', 0);
 						this._rush.animations.play('DimitriI',30,true);
                     }
                 }
-                else
+                else if (this._rush.body.gravity.y < 25000 && this._gravitycontroler)
                     this._rush.body.gravity.y = 25000;
                
                 if(!this._enPared){//Si no es pared, movimiento normal ---->>>>>>>>>> TIMER
@@ -271,6 +275,7 @@ var PlayScene = {
 
         if(this.checkPlayerFell()){
             //poner flash rojo.
+            this.hit.play();
             this.game.camera.flash(0xff0000, 500);
             this._ptos = 0;
             this.onPlayerFell();
@@ -283,9 +288,11 @@ var PlayScene = {
 
         	if(i < this._bat.length){
         		this.game.camera.flash(0xff0000, 500);
+              this.hit.play();
             	this._ptos = 0;
             	this.onPlayerFell();
         	}
+          this._rush.body.gravity.y += 100;
 
         }
        
@@ -309,8 +316,7 @@ var PlayScene = {
         			}	        	
 
         		}
-
-       
+        
         this.batMove();         
         
 
@@ -363,14 +369,14 @@ var PlayScene = {
     },
     batMove:function (){
         for(var i = 0; i < this._bat.length; i++) {
-        	this._bat[i].animations.play('batmove',15, true);
-        	if (this._rush.y > this._bat[i].y && (this._rush.y - this._bat[i].y) < 200)
+          if (this._rush.y > this._bat[i].y && (this._rush.y - this._bat[i].y) < 200)
             	this.batAttack(i);
         	else if (this._rush.y < this._bat[i].y &&  (this._bat[i].y - this._rush.y) < 200 )
             	this.batAttack(i);
             else{
             	this._bat[i].vely = 0;
-           
+               this._bat[i].animations.play('batmove',15, true);
+
            		if (this.game.physics.arcade.collide(this._bat[i], this.Suelo))
                		this._bat[i].velx = - this._bat[i].velx;
                
@@ -384,7 +390,9 @@ var PlayScene = {
     },
 
     batAttack: function(i){
-                //this._bat[i].animations.play('batattack',30, true);
+
+            console.log('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
+                this._bat[i].animations.play('batattack',30, true);
             if (this._bat[i].x > this._rush.x)
                 this._bat[i].velx = -150;   
             else if (this._bat[i].x < this._rush.x)
@@ -470,13 +478,17 @@ var PlayScene = {
             	this._rush.y += 4;
         	}
         }
-        if(this.game.input.keyboard.isDown(Phaser.Keyboard.UP)){
+        if(this.game.input.keyboard.isDown(Phaser.Keyboard.UP) && this._gravitycontroler){
         	//this._rush.animations.play('Paracaidas');
+          this._gravitycontroler = false;
         	console.log('AAAAAAAAAARRRRRRRRRIBA');
         	if(!this._enPared){
         		this._rush.loadTexture('Paracaidas');
-            	this._rush.y -= 4;
+            	this._rush.body.gravity.y = 5001;
         	}
+        }
+        else if(!this.game.input.keyboard.isDown(Phaser.Keyboard.UP)){    
+          this._gravitycontroler = true;
         }
         if(movement === Direction.NONE){
 			/*this._rush.loadTexture('DimitriI');

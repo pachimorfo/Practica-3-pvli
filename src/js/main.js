@@ -42,6 +42,8 @@ var PreloaderScene = {
       this.game.load.audio('intro','sounds/Intro.mp3');
       this.game.load.audio('loopeo','sounds/Loop.mp3');
       this.game.load.audio('final','sounds/Final.mp3');
+      this.game.load.audio('jump','sounds/Jump.mp3');
+      this.game.load.audio('hit','sounds/Hit.mp3');
       this.game.load.image('tiles', 'images/TileSetFinal.png');
       
       this.game.load.tilemap('tilemap', 'images/map.json', null, Phaser.Tilemap.TILED_JSON);
