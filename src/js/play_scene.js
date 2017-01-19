@@ -4,6 +4,7 @@
 //mover el player.
 var PlayerState = {'JUMP':0, 'RUN':1, 'FALLING':2, 'STOP':3}
 var Direction = {'LEFT':0, 'RIGHT':1, 'NONE':3}
+var Bat = require('./bat');
 
 
 //Scena de juego.
@@ -19,7 +20,7 @@ var PlayScene = {
     _enPared: false,
     w: 800, 
     h: 600,
-    _bat: [],
+    _bat: {},
     _ptos: 0,
     _isPaused: false,
     _menu: {},
@@ -52,30 +53,36 @@ var PlayScene = {
       //this.Colisiones = this.map.createLayer('Colisiones');
       this.Deathzones = this.map.createLayer('Deathzones');
       //Colisiones con el plano de muerte y con el plano de muerte y con suelo.
+      this._bat = this.game.add.group();
+      var b = new Bat(this.game, 'batattack',10,40);
+      console.log(b.x);
+      this._bat.add(b);
+      //this._bat.push(new Bat(this.game, 'batmove', 10,8640));
+      //this._bat.push(new Bat(this.game, 'batmove', 10,10816));
       this._rush = this.game.add.sprite(100,2, 'DimitriI');
       this._rush.scale.setTo(2,2);
       this._rush.animations.add('DimitriI');
       this._rush.animations.play('DimitriI',30,true);
+      var self = this;
       
+
+     
       
      // this._rush.animations.add('rush');
      // this._rush.animations.add('Paracaidas');
-      
-      this._bat.push(this.game.add.sprite(10,4416, 'batmove'));
-      //this._bat[0].animations.add('batAttack');
-      //this._bat[0].animations.play('batAttack',15, true);
-      this._bat.push(this.game.add.sprite(10,8640, 'batmove'));
-      this._bat.push(this.game.add.sprite(10,10816, 'batmove'));
+      //4416
+   
 
-      for(var i = 0; i < this._bat.length; i++) {
+      /*for(var i = 0; i < this._bat.length; i++) {
       	this._bat[i].velx = 150;
       	this._bat[i].vely = 0;
       	this._bat[i].scale.setTo(1.5,1.5);
         this._bat[i].animations.add('batattack');
         this._bat[i].animations.add('batmove');
       	
-  	  }
+  	  }*/
   	  console.log(this._bat.length);
+  	  console.log(this._bat[0]);
       this._pause = this.game.add.text(this.w - 100, 20, 'Pause', { font: '24px Arial', fill: '#ffj' });
       this._pause.fixedToCamera = true;
       this._pause.inputEnabled = true;
@@ -84,7 +91,7 @@ var PlayScene = {
       this._clock = this.game.time.create(false);
       this._clock.loop(1000, this.updateclock,this);
       this._clock.start();
-      var self = this;
+      
       
       var menu2;
       var unpauseMenu;
@@ -96,12 +103,13 @@ var PlayScene = {
         self._rush.body.gravity.y = 0;
         self._rush.body.gravity.x = 0;
         self._rush.body.velocity.x = 0;
-        for(var i = 0; i < self._bat.length; i++){
-        	self._bat[i].body.velocity.x = 0;                    
-          	self._bat[i].body.velocity.y = 0;    
+        self._bat.forEach(function (b){
+        	b.body.velx = 0;                    
+          	b.body.vely = 0;    
+          	console.log(b.x);
             
 
-        }
+        });
         
 
         self._menu = self.game.add.button(self.game.camera.x + 500, self.game.camera.y + 300, 
@@ -273,28 +281,7 @@ var PlayScene = {
        
 
 
-        if(this.checkPlayerFell()){
-            //poner flash rojo.
-            this.hit.play();
-            this.game.camera.flash(0xff0000, 500);
-            this._ptos = 0;
-            this.onPlayerFell();
-        }
-        else{
-        	var i = 0;
-        	while(i < this._bat.length && !this.checkPlayerBat(i)){
-        		i++;
-        	}
-
-        	if(i < this._bat.length){
-        		this.game.camera.flash(0xff0000, 500);
-              this.hit.play();
-            	this._ptos = 0;
-            	this.onPlayerFell();
-        	}
-          this._rush.body.gravity.y += 100;
-
-        }
+       
        
         this._timer++;
       //console.log(this._timer);
@@ -317,7 +304,35 @@ var PlayScene = {
 
         		}
         
-        this.batMove();         
+        //this.batMove(); 
+     
+        var self = this;
+        this._bat.forEach(function (b){
+        	b.update(self._rush.x,self._rush.y, self.game.physics.arcade.collide(b, self.Suelo));       
+
+        });
+        	
+     
+        if(this.checkPlayerFell()){
+            //poner flash rojo.
+            this.hit.play();
+            this.game.camera.flash(0xff0000, 500);
+            this._ptos = 0;
+            this.onPlayerFell();
+        }
+        else{
+        	this._rush.body.gravity.y += 100;
+       
+        	if(this.checkPlayerBat()){
+       
+        		this.game.camera.flash(0xff0000, 500);
+              this.hit.play();
+            	this._ptos = 0;
+            	this.onPlayerFell();
+        	}
+          
+
+        }        
         
 
     }},
@@ -367,48 +382,7 @@ var PlayScene = {
         this._rush.body.velocity.x = 0;
     	
     },
-    batMove:function (){
-        for(var i = 0; i < this._bat.length; i++) {
-          if (this._rush.y > this._bat[i].y && (this._rush.y - this._bat[i].y) < 200)
-            	this.batAttack(i);
-        	else if (this._rush.y < this._bat[i].y &&  (this._bat[i].y - this._rush.y) < 200 )
-            	this.batAttack(i);
-            else{
-            	this._bat[i].vely = 0;
-               this._bat[i].animations.play('batmove',15, true);
-
-           		if (this.game.physics.arcade.collide(this._bat[i], this.Suelo))
-               		this._bat[i].velx = - this._bat[i].velx;
-               
-           		this._bat[i].body.velocity.x = this._bat[i].velx;                    
-          		this._bat[i].body.velocity.y = this._bat[i].vely;    
-            }
-
-     	}
-
-                
-    },
-
-    batAttack: function(i){
-
-            console.log('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
-                this._bat[i].animations.play('batattack',30, true);
-            if (this._bat[i].x > this._rush.x)
-                this._bat[i].velx = -150;   
-            else if (this._bat[i].x < this._rush.x)
-                this._bat[i].velx = 150;
-            else this._bat[i].velx = 0;
-                
-            if (this._bat[i].y > this._rush.y)
-                this._bat[i].vely = -150;
-            else if (this._bat[i].y < this._rush.y)
-                this._bat[i].vely = 150;
-            else this._bat[i].vely = 0;
-
-            this._bat[i].body.velocity.x = this._bat[i].velx;
-            this._bat[i].body.velocity.y = this._bat[i].vely;
-              
-    },
+    
     teleport: function (){//SI REDIMENSIONAMOS, CAMBIAR PUNTOS DE TP. IMPORTANTE RESETEAR BAAAAAAAAAATS!!!!!!!!!!!!
             var puntTele = [960,3520,6656,9664,12224];
             for (var i = 1; i<= 4 ; i++){
@@ -443,8 +417,8 @@ var PlayScene = {
         return(this.game.physics.arcade.collide(this._rush, this.Deathzones));
             //this.onPlayerFell();
     }, 
-    checkPlayerBat: function(i){
-        return(this.game.physics.arcade.collide(this._rush, this._bat[i]));
+    checkPlayerBat: function(){
+        return(this.game.physics.arcade.collide(this._rush, this._bat));
             //this.onPlayerFell();
     },
         
@@ -506,9 +480,9 @@ var PlayScene = {
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
         this.game.stage.backgroundColor = '#a9f0ff';
         this.game.physics.arcade.enable(this._rush);
-        for(var i = 0; i < this._bat.length; i++) {
+        /*for(var i = 0; i < this._bat.length; i++) {
         	this.game.physics.arcade.enable(this._bat[i]);
-    	}
+    	}*/
         
         this._rush.body.bounce.y = 1000; //0,2
         this._rush.body.gravity.y = 25000; //2000
@@ -529,8 +503,10 @@ var PlayScene = {
     //TODO 9 destruir los recursos tilemap, tiles y logo.
     destroyResources: function(){
         this._rush.destroy();
-        for(var i=0;i++;i<this._bat.length)
-        this._bat[i].destroy();
+        /*for(var i=0;i<this._bat.length;i++){
+        	this._bat[i].destroy();
+        	this._bat.pop();
+        }*/
         this.intro.stop();
         this.loopeo.stop();
         //this.tilemap.destroy();
