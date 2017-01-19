@@ -8,6 +8,7 @@ function Bat(game, sprite, x, y){
   		this.anchor.setTo(0.5, 0.5);      	
   	  	this.velx = 150;
       	this.vely = 0;
+      	this.chase = false;
       	//this.scale.setTo(1.5,1.5);
       	var att = this.animations.add('batattack');
       	//var move = this.animations.add('batmove');	
@@ -16,39 +17,35 @@ function Bat(game, sprite, x, y){
 Bat.prototype = Object.create(Phaser.Sprite.prototype);
 Bat.constructor = Bat;
 Bat.prototype.batAttack = function(x,y){
+	
 
-			//this.loadTexture('batattack', 0);
-            //this.animations.add('batattack');
-            
-            if (this.x > x)
-                this.velx = -150;   
-            else if (this.x < x)
-                this.velx = 150;
-            else this.velx = 0;
+    
+    if (this.x > x)
+        this.velx = -150;   
+    else if (this.x < x)
+        this.velx = 150;
+    else this.velx = 0;
                 
-            if (this.y > y)
-                this.vely = -150;
-            else if (this.y < y)
-                this.vely = 150;
-            else this.vely = 0;
+    if (this.y > y)
+        this.vely = -150;
+    else if (this.y < y)
+        this.vely = 150;
+    else this.vely = 0;
 
-            this.body.velocity.x = this.velx;
-            this.body.velocity.y = this.vely;
-              
-    },
-Bat.prototype.update = function (Dx, Dy, paredes){
-	this.animations.play('batattack',15, true);
-	   if (Dy > this.y && (Dy - this.y) < 200)
-            	this.batAttack(Dx,Dy);
-        	else if (Dy < this.y &&  (this.y - Dy) < 200 )
-            	this.batAttack(Dx,Dy);
-            else{
-            	this.vely = 0;
-           		if (paredes)
-               		this.velx = - this.velx;
+    this.body.velocity.x = this.velx;
+    this.body.velocity.y = this.vely;
+
+	        
+},
+Bat.prototype.batmove = function(paredes){
+	this.animations.play('batattack',15,true);
+	this.vely = 0; 
+
+    if (paredes)
+    	this.velx = - this.velx;
                
-           		this.body.velocity.x = this.velx;                    
-          		this.body.velocity.y = this.vely;    
-        }
+   	this.body.velocity.x = this.velx;  
+   	this.body.velocity.y = this.vely;                
+
 }
 module.exports = Bat;

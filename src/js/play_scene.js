@@ -308,7 +308,13 @@ var PlayScene = {
      
         var self = this;
         this._bat.forEach(function (b){
-        	b.update(self._rush.x,self._rush.y, self.game.physics.arcade.collide(b, self.Suelo));       
+        	if(self._rush.y > b.y && (self._rush.y - b.y) < 200)//CAMBIAR
+        		b.batAttack(self._rush.x, self._rush.y);        		     
+        	else if(self._rush.y < b.y &&  (b.y - self._rush.y) < 200 ){
+        		b.batAttack(self._rush.x, self._rush.y); 
+        	}
+        	else
+        		b.batmove(self.game.physics.arcade.collide(b, self.Suelo));  
 
         });
         	
@@ -488,6 +494,7 @@ var PlayScene = {
         this._rush.body.gravity.y = 25000; //2000
         this._rush.body.gravity.x = 0;
         this._rush.body.velocity.x = 0;
+        this._enPared = false;
         
         this.game.camera.follow(this._rush);
     },

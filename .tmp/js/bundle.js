@@ -9,6 +9,7 @@ function Bat(game, sprite, x, y){
   		this.anchor.setTo(0.5, 0.5);      	
   	  	this.velx = 150;
       	this.vely = 0;
+      	this.chase = false;
       	//this.scale.setTo(1.5,1.5);
       	var att = this.animations.add('batattack');
       	//var move = this.animations.add('batmove');	
@@ -17,40 +18,36 @@ function Bat(game, sprite, x, y){
 Bat.prototype = Object.create(Phaser.Sprite.prototype);
 Bat.constructor = Bat;
 Bat.prototype.batAttack = function(x,y){
+	
 
-			//this.loadTexture('batattack', 0);
-            //this.animations.add('batattack');
-            
-            if (this.x > x)
-                this.velx = -150;   
-            else if (this.x < x)
-                this.velx = 150;
-            else this.velx = 0;
+    
+    if (this.x > x)
+        this.velx = -150;   
+    else if (this.x < x)
+        this.velx = 150;
+    else this.velx = 0;
                 
-            if (this.y > y)
-                this.vely = -150;
-            else if (this.y < y)
-                this.vely = 150;
-            else this.vely = 0;
+    if (this.y > y)
+        this.vely = -150;
+    else if (this.y < y)
+        this.vely = 150;
+    else this.vely = 0;
 
-            this.body.velocity.x = this.velx;
-            this.body.velocity.y = this.vely;
-              
-    },
-Bat.prototype.update = function (Dx, Dy, paredes){
-	this.animations.play('batattack',15, true);
-	   if (Dy > this.y && (Dy - this.y) < 200)
-            	this.batAttack(Dx,Dy);
-        	else if (Dy < this.y &&  (this.y - Dy) < 200 )
-            	this.batAttack(Dx,Dy);
-            else{
-            	this.vely = 0;
-           		if (paredes)
-               		this.velx = - this.velx;
+    this.body.velocity.x = this.velx;
+    this.body.velocity.y = this.vely;
+
+	        
+},
+Bat.prototype.batmove = function(paredes){
+	this.animations.play('batattack',15,true);
+	this.vely = 0; 
+
+    if (paredes)
+    	this.velx = - this.velx;
                
-           		this.body.velocity.x = this.velx;                    
-          		this.body.velocity.y = this.vely;    
-        }
+   	this.body.velocity.x = this.velx;  
+   	this.body.velocity.y = this.vely;                
+
 }
 module.exports = Bat;
 },{}],2:[function(require,module,exports){
@@ -562,7 +559,13 @@ var PlayScene = {
      
         var self = this;
         this._bat.forEach(function (b){
-        	b.update(self._rush.x,self._rush.y, self.game.physics.arcade.collide(b, self.Suelo));       
+        	if(self._rush.y > b.y && (self._rush.y - b.y) < 200)//CAMBIAR
+        		b.batAttack(self._rush.x, self._rush.y);        		     
+        	else if(self._rush.y < b.y &&  (b.y - self._rush.y) < 200 ){
+        		b.batAttack(self._rush.x, self._rush.y); 
+        	}
+        	else
+        		b.batmove(self.game.physics.arcade.collide(b, self.Suelo));  
 
         });
         	
@@ -742,6 +745,7 @@ var PlayScene = {
         this._rush.body.gravity.y = 25000; //2000
         this._rush.body.gravity.x = 0;
         this._rush.body.velocity.x = 0;
+        this._enPared = false;
         
         this.game.camera.follow(this._rush);
     },
